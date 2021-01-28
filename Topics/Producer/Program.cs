@@ -2,10 +2,12 @@
 using System;
 using System.Text;
 
-namespace HelloWorld.Producer
+namespace Topics.Producer
 {
   class Program
   {
+    private const string EXCHANGE_NAME = "openfaas_staging";
+
     static void Main(string[] args)
     {
       var factory = new ConnectionFactory
@@ -18,12 +20,15 @@ namespace HelloWorld.Producer
       {
         using (var channel = connection.CreateModel())
         {
-          channel.QueueDeclare(queue: "hello", durable: false, exclusive: false, autoDelete: false, arguments: null);
+          channel.ExchangeDeclare(exchange: EXCHANGE_NAME, type: "topic", durable: true, autoDelete: false);
 
-          var message = "Hello World!";
+          const string routingKey = "staging.payment.authorization";
+
+          // TODO: try to send an actual hasura payload!
+          var message = "hasura payload";
           var body = Encoding.UTF8.GetBytes(message);
 
-          channel.BasicPublish(exchange: "", routingKey: "hello", basicProperties: null, body: body);
+          channel.BasicPublish(exchange: EXCHANGE_NAME, routingKey: routingKey, basicProperties: null, body: body);
 
           Console.WriteLine("Sent {0}", message);
         }

@@ -2,7 +2,7 @@
 using System;
 using System.Text;
 
-namespace Producer
+namespace WorkQueues.Producer
 {
   class Program
   {
@@ -31,9 +31,6 @@ namespace Producer
           Console.WriteLine("Sent {0}", message);
         }
       }
-
-      Console.WriteLine("Press [enter] to exit");
-      Console.ReadLine();
     }
 
     private static string GetMessage(string[] args)

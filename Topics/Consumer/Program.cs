@@ -2,12 +2,13 @@
 using RabbitMQ.Client.Events;
 using System;
 using System.Text;
-using System.Threading;
 
-namespace Consumer
+namespace Topics.Consumer
 {
   class Program
   {
+    private const string EXCHANGE_NAME = "openfaas_staging";
+
     static void Main(string[] args)
     {
       var factory = new ConnectionFactory
@@ -20,7 +21,12 @@ namespace Consumer
       {
         using (var channel = connection.CreateModel())
         {
-          channel.QueueDeclare(queue: "task_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+          channel.ExchangeDeclare(exchange: EXCHANGE_NAME, type: "topic", durable: true, autoDelete: false);
+          var queueName = channel.QueueDeclare().QueueName;
+          const string routingKey = "staging.payment.authorization";
+          channel.QueueBind(queue: queueName, exchange: EXCHANGE_NAME, routingKey: routingKey);
+
+          Console.WriteLine("Waiting for messages...");
 
           var consumer = new EventingBasicConsumer(channel);
           consumer.Received += (sender, ea) =>
@@ -28,18 +34,9 @@ namespace Consumer
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             Console.WriteLine("Received {0}", message);
-
-            var dots = message.Split('.').Length - 1;
-            Thread.Sleep(dots * 1000);
-
-            Console.WriteLine("Done");
-
-            // Note: it is possible to access the channel via
-            //       ((EventingBasicConsumer)sender).Model here
-            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
           };
 
-          channel.BasicConsume(queue: "task_queue", autoAck: false, consumer: consumer);
+          channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
 
           Console.WriteLine("Press [enter] to exit");
           Console.ReadLine();

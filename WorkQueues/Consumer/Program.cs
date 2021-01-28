@@ -2,8 +2,9 @@
 using RabbitMQ.Client.Events;
 using System;
 using System.Text;
+using System.Threading;
 
-namespace HelloWorld.Consumer
+namespace WorkQueues.Consumer
 {
   class Program
   {
@@ -19,17 +20,26 @@ namespace HelloWorld.Consumer
       {
         using (var channel = connection.CreateModel())
         {
-          channel.QueueDeclare(queue: "hello", durable: false, exclusive: false, autoDelete: false, arguments: null);
+          channel.QueueDeclare(queue: "task_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 
           var consumer = new EventingBasicConsumer(channel);
-          consumer.Received += (model, ea) =>
+          consumer.Received += (sender, ea) =>
           {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             Console.WriteLine("Received {0}", message);
+
+            var dots = message.Split('.').Length - 1;
+            Thread.Sleep(dots * 1000);
+
+            Console.WriteLine("Done");
+
+            // Note: it is possible to access the channel via
+            //       ((EventingBasicConsumer)sender).Model here
+            channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
           };
 
-          channel.BasicConsume(queue: "hello", autoAck: true, consumer: consumer);
+          channel.BasicConsume(queue: "task_queue", autoAck: false, consumer: consumer);
 
           Console.WriteLine("Press [enter] to exit");
           Console.ReadLine();
