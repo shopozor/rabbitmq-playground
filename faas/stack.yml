@@ -1,19 +1,8 @@
-# we need a separate stack files because the configuration section is different,
-# depending on the lang; typically, we don't want to copy the .Net Core stuff
-# in the nodejs build folders
 version: 1.0
 provider:
   name: openfaas
   gateway: ${OPENFAAS_GATEWAY_URL:-http://localhost:31112}
 functions:
-  # mailhog-client:
-  #   namespace: ${OPENFAAS_NAMESPACE:-dev}
-  #   lang: node-hasura
-  #   handler: ./MailhogClient
-  #   image: shopozor/mailhog-client-fn:${IMG_TAG:-latest}
-  #   environment:
-  #     MAIL_SERVER_API_PORT: ${MAIL_SERVER_API_PORT:-8025}
-  #     MAIL_SERVER_HOST: ${MAIL_SERVER_HOST:-mailhog.dev}
   message-queue-spike:
     namespace: ${OPENFAAS_NAMESPACE:-dev}
     lang: node-hasura
